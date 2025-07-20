@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .models import models, schemas
-from .controllers import orders
+from .controllers import orders, sandwiches
 from .dependencies.database import engine, get_db
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
@@ -53,3 +53,35 @@ def delete_one_order(order_id: int, db: Session = Depends(get_db)):
     if order is None:
         raise HTTPException(status_code=404, detail="User not found")
     return orders.delete(db=db, order_id=order_id)
+
+
+@app.post("/sandwiches/", response_model=schemas.Sandwich, tags=["Sandwiches"])
+def create_sandwich(sandwich: schemas.SandwichCreate, db: Session = Depends(get_db)):
+    return sandwiches.create(db=db, sandwich=sandwich)
+
+
+@app.get("/sandwiches/", response_model=List[schemas.Sandwich], tags=["Sandwiches"])
+def get_all_sandwiches(db: Session = Depends(get_db)):
+    return sandwiches.read_all(db)
+
+
+@app.get("/sandwiches/{sandwich_id}", response_model=schemas.Sandwich, tags=["Sandwiches"])
+def get_sandwich(sandwich_id: int, db: Session = Depends(get_db)):
+    result = sandwiches.read_one(db, sandwich_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Sandwich not found")
+    return result
+
+
+@app.put("/sandwiches/{sandwich_id}", response_model=schemas.Sandwich, tags=["Sandwiches"])
+def update_sandwich(sandwich_id: int, sandwich: schemas.SandwichCreate, db: Session = Depends(get_db)):
+    return sandwiches.update(db, sandwich_id, sandwich)
+
+
+@app.delete("/sandwiches/{sandwich_id}", tags=["Sandwiches"])
+def delete_sandwich(sandwich_id: int, db: Session = Depends(get_db)):
+    return sandwiches.delete(db, sandwich_id)
+
+
+
+
