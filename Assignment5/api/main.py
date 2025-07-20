@@ -1,10 +1,10 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from fastapi.middleware.cors import CORSMiddleware
-
 from .models import models, schemas
 from .controllers import orders
 from .dependencies.database import engine, get_db
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -26,7 +26,7 @@ def create_order(order: schemas.OrderCreate, db: Session = Depends(get_db)):
     return orders.create(db=db, order=order)
 
 
-@app.get("/orders/", response_model=list[schemas.Order], tags=["Orders"])
+@app.get("/orders/", response_model=List[schemas.Order], tags=["Orders"])
 def read_orders(db: Session = Depends(get_db)):
     return orders.read_all(db)
 
