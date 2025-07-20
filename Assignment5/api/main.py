@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .models import models, schemas
-from .controllers import orders, sandwiches, resources, recipes
+from .controllers import orders, sandwiches, resources, recipes, order_details
 from .dependencies.database import engine, get_db
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
@@ -145,3 +145,35 @@ def delete_one_recipe(recipe_id: int, db: Session = Depends(get_db)):
     return recipes.delete(db=db, recipe_id=recipe_id)
 
 
+@app.post("/order_details/", response_model=schemas.OrderDetail, tags=["OrderDetails"])
+def create_order_detail(order_detail: schemas.OrderDetailCreate, db: Session = Depends(get_db)):
+    return order_detail.create(db=db, order_detail=order_detail)
+
+
+@app.get("/order_details/", response_model=List[schemas.OrderDetail], tags=["OrderDetails"])
+def read_order_details(db: Session = Depends(get_db)):
+    return read_order_details.read_all(db)
+
+
+@app.get("/order_details/{order_detail_id}", response_model=schemas.OrderDetail, tags=["OrderDetails"])
+def read_one_order_detail(order_detail_id: int, db: Session = Depends(get_db)):
+    order_detail_db = order_details.read_one(db, order_detail_id=order_detail_id)
+    if order_detail_db is None:
+        raise HTTPException(status_code=404, detail="Order Details not found")
+    return order_detail_db
+
+
+@app.put("/order_details/{order_detail_id}", response_model=schemas.OrderDetail, tags=["OrderDetails"])
+def update_one_order_detail(order_detail_id: int, order_detail: schemas.OrderDetailUpdate, db: Session = Depends(get_db)):
+    order_detail_db = order_detail.read_one(db, order_detail_id=order_detail_id)
+    if order_detail_db is None:
+        raise HTTPException(status_code=404, detail="Order details not found")
+    return order_detail.update(db=db, order_detail=order_detail, order_detail_id=order_detail_id)
+
+
+@app.delete("/order_details/{order_detail_id}", tags=["OrderDetails"])
+def delete_one_order_detail(order_detail_id: int, db: Session = Depends(get_db)):
+    order_detail_id = order_details.read_one(db, order_detail_id=order_detail_id)
+    if order_details is None:
+        raise HTTPException(status_code=404, detail="Order details not found")
+    return order_details.delete(db=db, order_detail_id=order_detail_id)
